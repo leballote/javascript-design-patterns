@@ -13,7 +13,8 @@
 </head>
 <body>
   <main>
-    <h1>Notoryx</h1>
+    <h1 id="appTitle">Notoryx</h1>
+    <input type="text" id="search-box" class="search-box">
     <button id="new-note-btn" class="large"><i class="fa-solid fa-plus"></i></button>
     <ul id="notes" class="notes">
     </ul>
@@ -22,9 +23,9 @@
   </main>     
 
   <template id="note-template">
-    <li class="note">
+    <li class="note" draggable="true">
       <textarea name="note-title" class="note-title" cols="30" rows="1" role="textbox" readonly placeholder="Title"></textarea>
-      <textarea name="note-body" class="note-body" role="textbox" cols="30" rows="10" placeholder="Write here..."></textarea>
+      <textarea name="note-body" class="note-body" role="textbox" cols="30" rows="10" readonly placeholder="Write here..."></textarea>
       <div class="buttons">
         <button class="save-note medium"><i class="fa-solid fa-floppy-disk"></i></button>
         <button class="delete-note medium"><i class="fa-solid fa-trash"></i></button>
@@ -35,6 +36,6 @@
       </footer>
     </li>
   </template>
-  <script src="script.js"></script>
+  <script src="./app.js" type="module"></script>
 </body>
 </html>
