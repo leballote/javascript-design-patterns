@@ -7,10 +7,12 @@ const notesElement = document.getElementById("notes");
 const blackBack = document.getElementById("black-back");
 const newNoteBtn = document.getElementById("new-note-btn");
 const searchBox = document.getElementById("search-box");
+const undoBtn = document.getElementById("undo-btn");
+
+//the only state in the app
+let currentSelected = null;
 
 const pubSub = new PubSub();
-
-let currentSelected = null;
 
 //Listeners
 
@@ -29,6 +31,7 @@ notesElement.addEventListener("click", (evt) => {
   const noteEl = evt.target.closest(".note");
   const saveButton = evt.target.closest(".save-note");
   const deleteButton = evt.target.closest(".delete-note");
+  const closeButton = evt.target.closest(".close-btn");
 
   if (noteEl) {
     if (saveButton) {
@@ -41,6 +44,8 @@ notesElement.addEventListener("click", (evt) => {
       pubSub.publish("deleteNote", {
         id: noteEl.id,
       });
+    } else if (closeButton) {
+      blackBack.click();
     } else {
       pubSub.publish("selectNote", {
         id: noteEl.id,
@@ -85,6 +90,19 @@ notesElement.addEventListener("drop", (ev) => {
   }
 });
 
+undoBtn.addEventListener("click", (ev) => {
+  pubSub.publish("undo", null);
+});
+
+document.addEventListener("keydown", (ev) => {
+  if (ev.ctrlKey && ev.key === "z") {
+    if (!currentSelected) {
+      ev.preventDefault();
+      pubSub.publish("undo", null);
+    }
+  }
+});
+
 //functions
 
 function getNotesElement() {
@@ -97,6 +115,10 @@ function getBlackBack() {
 
 function getNewNoteBtn() {
   return newNoteBtn;
+}
+
+function getSearchValue() {
+  return searchBox.value;
 }
 
 function createNote(noteData) {
@@ -135,6 +157,7 @@ function insertNotes(notesList, positions) {
 function removeNote(noteEl) {
   if (typeof noteEl === "string") noteEl = getNote(noteEl);
   noteEl.remove();
+  if (currentSelected === noteEl) unselectNote();
 }
 
 function updateEditTime(noteEl, lastEditDate) {
@@ -253,6 +276,7 @@ const notesView = {
   getNotesElement,
   getBlackBack,
   getNewNoteBtn,
+  getSearchValue,
 
   // notesRelated funcs
   createNote,

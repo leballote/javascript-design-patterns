@@ -1,14 +1,7 @@
-export class Command {
-  constructor(exec, undo) {
-    this.prev;
-    this.exec = exec;
-    this.undo = undo;
-  }
-}
-
 export class CommandManager {
-  constructor() {
+  constructor(emptyCb) {
     this.history = [];
+    this.emptyCb = emptyCb || (() => {});
   }
 
   exec(command) {
@@ -18,6 +11,7 @@ export class CommandManager {
 
   undo() {
     const command = this.history.pop();
-    command.undo();
+    if (command) command.undo();
+    else this.emptyCb();
   }
 }

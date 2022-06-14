@@ -23,46 +23,81 @@ h1 {
   font-weight: bolder;
 }
 
+.notes-container {
+  display: flex;
+  flex-flow: wrap column;
+  /* justify-content: center; */
+  margin: 1em;
+  padding: 0;
+}
+
 .notes {
+  /* debug */ 
   display: flex;
   flex-flow: column-reverse wrap;
   list-style: none;
-  margin: 0;
   padding: 0;
   overscroll-behavior: none;
+  margin: 0;
 }
 
 .note {
-  /* display: flex;
-  flex-flow: wrap row; */
+  position: relative;
   border: 1px solid gray;
-  margin: 1em;
-  /* padding: 0.2em 1em; */
+  margin: 1rem 0;
   border-radius: 10px;
   background-color: rgb(255, 246, 253);
+  cursor: default;
 }
 
+.note:not(.selected):hover {
+  box-shadow: 10px -8px rgba(128, 128, 128, 0.4);
+}
 
 .note.selected {
+  margin: 0;
   position: fixed;
-  top: 0;
-  left: 5em;
-  right: 5em;
-  bottom: 0;
   z-index: 1;
-  overflow: scroll;
-  overscroll-behavior: none;
+  align-self: center;
+  top: 0;
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  cursor: auto;
 }
 
+.text-container {
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
+  overflow: hidden;
+}
+
+.note.selected .text-container {
+  max-height: 80vh;
+  overflow: auto;
+}
+
+/*TODO: avoid text highlighting */
 .note-title,
 .note-body {
   resize: none;
   width: 100%;
   padding: .6em;
   overflow: hidden;
-  cursor: auto;
   border: none;
-  /* border: solid rgb(84, 64, 80) 1px; */
+  outline: none;
+  cursor: inherit;
+}
+
+.note.selected.note-title,
+.note.selected.note-body {
+  resize: none;
+  width: 100%;
+  padding: .6em;
+  overflow: hidden;
+  border: none;
+  outline: none;
 }
 
 .note-title {
@@ -82,6 +117,11 @@ h1 {
   flex-flow: row wrap;
   justify-content: flex-end;
   font-size: .8rem;
+}
+
+/* TODO: check how to make the title fixed*/
+.note.selected .note-title {
+  /* position: absolute; */
 }
 
 .note-footer > p {
@@ -125,11 +165,86 @@ button.medium {
   color: gray;
 }
 
+button.close-btn {
+  display: none;
+  position: absolute;
+  top: 0;
+  right: 0;
+  color: gray;
+  border-radius: 50%;
+  border: 0;
+}
+
+.note.selected button.close-btn {
+  display: block;
+}
+
+button.close-btn:hover {
+  color: rgb(69, 69, 69);
+  background-color: transparent;
+}
+
+
+/* other actionables */
+
+.actions {
+  display: flex;
+  flex: 100%;
+  gap: 2em;
+  margin: 1em 0;
+}
+
+.search-bar {
+  display: flex;
+  flex: 80%;
+  font-size: 2rem;
+  border: gray solid 3px;
+  border-radius: 2em;
+}
+
+.search-icon {
+  display: flex;
+  color: gray;
+  padding-left: 1em;
+  align-items: center;
+  border: none;
+  background-color: white;
+  flex: min(10%, 100px);
+  border-top-left-radius: inherit;
+  border-bottom-left-radius: inherit;
+  font-size: 1em
+}
+
+.search-box {
+  border: none;
+  padding: 0 0.8em;
+  outline: none;
+  flex: max(10%, calc(100% - 100px));
+  border-top-right-radius: inherit;
+  border-bottom-right-radius: inherit;
+  font-size: 1em;
+}
+
+.search-box:focus::placeholder {
+  color: transparent;
+}
+
+.option-menu {
+  display: flex;
+  flex: 20%;
+  justify-content: center;
+  border: solid gray 3px;
+  margin: 0;
+  padding: 0.5em;
+  border-radius: .8em;
+}
+
 #new-note-btn {
   display: block;
-  width: 98%;
-  margin: auto;
+  border: solid gray 3px;
+  color: rgb(33, 31, 31);
   background-color: rgb(226, 153, 210);
+  margin: .2em 0;
 }
 
 #new-note-btn:hover {

@@ -14,25 +14,38 @@
 <body>
   <main>
     <h1 id="appTitle">Notoryx</h1>
-    <input type="text" id="search-box" class="search-box">
-    <button id="new-note-btn" class="large"><i class="fa-solid fa-plus"></i></button>
-    <ul id="notes" class="notes">
-    </ul>
+    <div class="notes-container">
+      <section class="actions">
+        <div class="search-bar">
+          <label class="search-icon" id="search-icon" for="search-box"><i class="fa-solid fa-magnifying-glass"></i></label>
+          <input type="text" id="search-box" class="search-box" placeholder="Search...">
+        </div>
+        <menu class="option-menu">
+          <button id="undo-btn" class="undo medium"><i class="fa-solid fa-reply"></i></i></button>
+        </menu>
+      </section>
+      <button id="new-note-btn" class="large"><i class="fa-solid fa-plus"></i></button>
+      <ul id="notes" class="notes">
+      </ul>
+    </div>
     <div id="black-back">
     </div>
   </main>     
 
   <template id="note-template">
     <li class="note" draggable="true">
-      <textarea name="note-title" class="note-title" cols="30" rows="1" role="textbox" readonly placeholder="Title"></textarea>
-      <textarea name="note-body" class="note-body" role="textbox" cols="30" rows="10" readonly placeholder="Write here..."></textarea>
+      <button class="close-btn medium"><i class="fa-solid fa-circle-xmark"></i></button>
+      <div class="text-container">
+        <textarea name="note-title" class="note-title" cols="30" rows="1" role="textbox" readonly placeholder="Title"></textarea>
+        <textarea name="note-body" class="note-body" role="textbox" cols="30" rows="3" readonly placeholder="Write here..."></textarea>
+      </div>
       <div class="buttons">
         <button class="save-note medium"><i class="fa-solid fa-floppy-disk"></i></button>
         <button class="delete-note medium"><i class="fa-solid fa-trash"></i></button>
       </div>
       <footer class="note-footer">
         <p class="creation">Creation: <span class="note-creation-date"></span></p>
-        <p class="last-edit">Last time: <span class="note-last-edit-date"></span></p>
+        <p class="last-edit">Last time edited: <span class="note-last-edit-date"></span></p>
       </footer>
     </li>
   </template>
