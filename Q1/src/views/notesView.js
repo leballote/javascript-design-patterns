@@ -12,19 +12,19 @@ const undoBtn = document.getElementById("undo-btn");
 //the only state in the app
 let currentSelected = null;
 
-const pubSub = new PubSub();
+const notesView = new PubSub();
 
-//Listeners
-
-newNoteBtn.addEventListener("click", () => pubSub.publish("newNote", {}));
+newNoteBtn.addEventListener("click", () => {
+  notesView.publish("newNote", {});
+});
 
 blackBack.addEventListener("click", () => {
-  pubSub.publish("saveNote", {
+  notesView.publish("saveNote", {
     id: currentSelected.id,
     lastEditDate: new Date().toISOString(),
     noteData: getNoteData(currentSelected),
   });
-  pubSub.publish("unselectNote", {});
+  notesView.publish("unselectNote", {});
 });
 
 notesElement.addEventListener("click", (evt) => {
@@ -35,19 +35,19 @@ notesElement.addEventListener("click", (evt) => {
 
   if (noteEl) {
     if (saveButton) {
-      pubSub.publish("saveNote", {
+      notesView.publish("saveNote", {
         id: noteEl.id,
         lastEditDate: new Date().toISOString(),
         noteData: getNoteData(noteEl),
       });
     } else if (deleteButton) {
-      pubSub.publish("deleteNote", {
+      notesView.publish("deleteNote", {
         id: noteEl.id,
       });
     } else if (closeButton) {
       blackBack.click();
     } else {
-      pubSub.publish("selectNote", {
+      notesView.publish("selectNote", {
         id: noteEl.id,
       });
     }
@@ -55,7 +55,7 @@ notesElement.addEventListener("click", (evt) => {
 });
 
 searchBox.addEventListener("input", (evt) => {
-  pubSub.publish("searchNotes", {
+  notesView.publish("searchNotes", {
     text: evt.target.value,
   });
 });
@@ -86,36 +86,24 @@ notesElement.addEventListener("drop", (ev) => {
       note1Id: note1Id,
       note2Id: note.id,
     };
-    pubSub.publish("exchangeNotes", context);
+    notesView.publish("exchangeNotes", context);
   }
 });
 
 undoBtn.addEventListener("click", (ev) => {
-  pubSub.publish("undo", null);
+  notesView.publish("undo", null);
 });
 
 document.addEventListener("keydown", (ev) => {
   if (ev.ctrlKey && ev.key === "z") {
     if (!currentSelected) {
       ev.preventDefault();
-      pubSub.publish("undo", null);
+      notesView.publish("undo", null);
     }
   }
 });
 
 //functions
-
-function getNotesElement() {
-  return notesElement;
-}
-
-function getBlackBack() {
-  return blackBack;
-}
-
-function getNewNoteBtn() {
-  return newNoteBtn;
-}
 
 function getSearchValue() {
   return searchBox.value;
@@ -165,24 +153,8 @@ function updateEditTime(noteEl, lastEditDate) {
   noteEl.querySelector(".note-last-edit-date").textContent = lastEditDate;
 }
 
-function replaceNotes(notesList, positions) {
-  //positions must be a permutation of [1...notesList.length] in order to work properly
-  // the validation is fairly costly so is responsibility of the programmer to ensure this
-  notesList = notesList ?? [];
-  positions = positions ?? [...Array(notesList.length).keys()];
-  if (positions.length !== notesList.length) {
-    throw new Error("notesList and positions must have the same length");
-  }
-  notesList = notesList
-    .map((el, idx) => Object.assign({ position: positions[idx] }, { el }))
-    .sort((a, b) => a.position - b.position)
-    .map((el) => el.el);
-
+function replaceNotes(notesList) {
   notesElement.replaceChildren(...notesList);
-}
-
-function resetNotes() {
-  replaceNotes();
 }
 
 function createAndInsertNote(noteData, position) {
@@ -218,6 +190,7 @@ function fillNote(noteEl, noteData) {
 }
 
 function selectNote(noteEl) {
+  if (noteEl == null) unselectNote();
   if (typeof noteEl === "string") {
     noteEl = document.querySelector(`.note#${noteEl}`);
   }
@@ -271,28 +244,30 @@ function exchangeNotes(note1, note2) {
   parent2.replaceChild(note1, ph);
 }
 
-const notesView = {
+const toExport = {
   //getters
-  getNotesElement,
-  getBlackBack,
-  getNewNoteBtn,
   getSearchValue,
 
-  // notesRelated funcs
-  createNote,
-  createNotes,
-  fillNote,
-  insertNote,
-  insertNotes,
+  //create notes
   createAndInsertNote,
   createAndInsertNotes,
   createAndReplaceNotes,
+
+  // notesRelated edit related
+  fillNote,
   updateEditTime,
+
+  //notes delete
   removeNote,
+
+  // notes state
   selectNote,
   unselectNote,
+
+  //others
   exchangeNotes,
-  pubSub,
 };
+
+Object.assign(notesView, toExport);
 
 export default notesView;

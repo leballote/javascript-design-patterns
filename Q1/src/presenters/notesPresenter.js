@@ -5,35 +5,42 @@ import { CommandManager } from "../Command.js";
 //initialization
 const commandManager = new CommandManager();
 
-//
-renderAllNotes();
+start();
 
 //view subscriptions
-notesView.pubSub.subscribe("newNote", (context) =>
-  commandManager.exec(new NewNoteCommand())
-);
-notesView.pubSub.subscribe("deleteNote", (context) =>
+notesView.subscribe("newNote", (context) => {
+  commandManager.exec(new NewNoteCommand());
+});
+notesView.subscribe("deleteNote", (context) =>
   commandManager.exec(new DeleteNoteCommand(context))
 );
-notesView.pubSub.subscribe("saveNote", (context) =>
+notesView.subscribe("saveNote", (context) =>
   commandManager.exec(new SaveNoteCommand(context))
 );
-notesView.pubSub.subscribe("selectNote", selectNote);
-notesView.pubSub.subscribe("unselectNote", unselectNote);
-notesView.pubSub.subscribe("searchNotes", renderSearched);
-notesView.pubSub.subscribe("exchangeNotes", (context) => {
+notesView.subscribe("selectNote", selectNote);
+notesView.subscribe("unselectNote", unselectNote);
+notesView.subscribe("searchNotes", renderSearched);
+notesView.subscribe("exchangeNotes", (context) => {
   commandManager.exec(new ExchangeNotesCommand(context));
 });
-notesView.pubSub.subscribe("undo", undo);
+notesView.subscribe("undo", undo);
+
+function start() {
+  // I didn't know where to put this. I guess I could have done a routers folder or a file for it, but not sure if that follows the mvp pattern
+  const { noteId } = getURLQuery();
+  renderAllNotes();
+  selectNote({ id: noteId }, false);
+
+  window.addEventListener("popstate", () => {
+    const { noteId } = getURLQuery();
+    selectNote({ id: noteId }, false);
+  });
+}
 
 //main functions
 
 function renderAllNotes() {
-  const notes = notesModel
-    .getList()
-    .sort((note1, note2) => note1.position - note2.position)
-    .map(formatNoteData);
-  notesView.createAndReplaceNotes(notes);
+  renderSearched({ text: "" });
 }
 
 //TODO: I don't like that having two functions that perform the same operations basically, but I like that the first render doesn't need to be aware of the search term
@@ -51,6 +58,7 @@ function renderSearched(context) {
   notesView.createAndReplaceNotes(notes);
 }
 
+//crud functions
 function newNote() {
   const now = new Date();
 
@@ -100,13 +108,25 @@ function saveNote(context) {
   return { previousData: modelData, currentData: newModelData };
 }
 
-function unselectNote() {
+//other functions
+function unselectNote(context, push = true) {
+  console.log("unselect note pushing state");
   notesView.unselectNote();
+  if (push) {
+    history.pushState(null, null, "/src/index.html");
+  }
 }
 
-function selectNote(context) {
+function selectNote(context, push = true) {
   const { id } = context;
+  console.log("selecting note", id);
   notesView.selectNote(id);
+  const newQuery = `/src/index.html?noteId=${id}`;
+  const { currentId } = getURLQuery();
+  if (id !== currentId && push) {
+    console.log("select note pushing state");
+    history.pushState(null, null, newQuery);
+  }
 }
 
 function exchangeNotes(context) {
@@ -125,6 +145,7 @@ function exchangeNotes(context) {
   return context;
 }
 
+//This simplifies tha api
 function undo() {
   commandManager.undo();
 }
@@ -212,6 +233,13 @@ function formatDate(date) {
   return date.toLocaleString();
 }
 
+function getURLQuery() {
+  return new Proxy(new URLSearchParams(window.location.search), {
+    get: (searchParams, prop) => searchParams.get(prop),
+  });
+}
+
+//translate functions
 function modelId(noteId) {
   return noteId.match(/\d+$/)[0];
 }
@@ -220,4 +248,12 @@ function viewId(noteId) {
   return `note-${noteId}`;
 }
 
-export default { commandManager };
+// I don't what should be exported from here
+const notesPresenter = {
+  renderAllNotes,
+  renderSearched,
+  selectNote,
+  unselectNote,
+};
+
+export default notesPresenter;

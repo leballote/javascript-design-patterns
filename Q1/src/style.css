@@ -119,10 +119,10 @@ h1 {
   font-size: .8rem;
 }
 
-/* TODO: check how to make the title fixed*/
-.note.selected .note-title {
-  /* position: absolute; */
-}
+/* TODO: maybe make the title fixed when selected*/
+/* .note.selected .note-title {
+
+} */
 
 .note-footer > p {
   width: 20%;

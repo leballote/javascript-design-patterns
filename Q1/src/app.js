@@ -1,5 +1,5 @@
-import notesModel from "./models/notesModel.js";
-import notesView from "./views/notesView.js";
 import notesPresenter from "./presenters/notesPresenter.js";
+import notesView from "./views/notesView.js";
 
 window.notesPresenter = notesPresenter;
+window.notesView = notesView;
