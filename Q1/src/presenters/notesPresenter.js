@@ -1,49 +1,52 @@
 import notesView from "../views/notesView.js";
 import notesModel from "../models/notesModel.js";
 import { CommandManager } from "../Command.js";
+import {
+  formatNoteData,
+  formatDate,
+  getURLQuery,
+  modelId,
+  viewId,
+} from "./utils.js";
 
 //initialization
 const commandManager = new CommandManager();
 
-start();
+initialize();
 
 //view subscriptions
-notesView.subscribe("newNote", (context) => {
+notesView.subscribe(notesView.eventTypes.newNote, (context) => {
   commandManager.exec(new NewNoteCommand());
 });
-notesView.subscribe("deleteNote", (context) =>
+notesView.subscribe(notesView.eventTypes.deleteNote, (context) =>
   commandManager.exec(new DeleteNoteCommand(context))
 );
-notesView.subscribe("saveNote", (context) =>
+notesView.subscribe(notesView.eventTypes.saveNote, (context) =>
   commandManager.exec(new SaveNoteCommand(context))
 );
-notesView.subscribe("selectNote", selectNote);
-notesView.subscribe("unselectNote", unselectNote);
-notesView.subscribe("searchNotes", renderSearched);
-notesView.subscribe("exchangeNotes", (context) => {
+notesView.subscribe(notesView.eventTypes.selectNote, selectNote);
+notesView.subscribe(notesView.eventTypes.unselectNote, unselectNote);
+notesView.subscribe(notesView.eventTypes.searchNotes, renderSearched);
+notesView.subscribe(notesView.eventTypes.exchangeNotes, (context) => {
   commandManager.exec(new ExchangeNotesCommand(context));
 });
-notesView.subscribe("undo", undo);
+notesView.subscribe(notesView.eventTypes.undo, undo);
 
-function start() {
-  // I didn't know where to put this. I guess I could have done a routers folder or a file for it, but not sure if that follows the mvp pattern
+notesView.subscribe(notesView.eventTypes.loadPage, loadPage);
+
+function initialize() {
   const { noteId } = getURLQuery();
-  renderAllNotes();
-  selectNote({ id: noteId }, false);
-
-  window.addEventListener("popstate", () => {
-    const { noteId } = getURLQuery();
-    selectNote({ id: noteId }, false);
-  });
-}
-
-//main functions
-
-function renderAllNotes() {
   renderSearched({ text: "" });
+  selectNote({ id: noteId }, false);
 }
 
-//TODO: I don't like that having two functions that perform the same operations basically, but I like that the first render doesn't need to be aware of the search term
+//I am guessing that only the event listener in the window is required in the view
+function loadPage(context) {
+  const { noteId } = getURLQuery();
+  selectNote({ id: noteId }, false);
+}
+
+// The idea  of having renderAllNotes and renderSearched separated was to be flexible in the implementation of renderAllNotes, because It could have being done without matching the empty string, and if I wanted to refactor it, then I only had to change the implementation of that function instead of look for every function call of renderSearched with the specific argument {text: ""} and change it for renderAllNotes
 function renderSearched(context) {
   const { text } = context;
   let notes = notesModel
@@ -110,21 +113,18 @@ function saveNote(context) {
 
 //other functions
 function unselectNote(context, push = true) {
-  console.log("unselect note pushing state");
   notesView.unselectNote();
   if (push) {
-    history.pushState(null, null, "/src/index.html");
+    history.pushState(null, null, "./");
   }
 }
 
 function selectNote(context, push = true) {
   const { id } = context;
-  console.log("selecting note", id);
   notesView.selectNote(id);
-  const newQuery = `/src/index.html?noteId=${id}`;
+  const newQuery = `./?noteId=${id}`;
   const { currentId } = getURLQuery();
   if (id !== currentId && push) {
-    console.log("select note pushing state");
     history.pushState(null, null, newQuery);
   }
 }
@@ -216,41 +216,7 @@ class SaveNoteCommand {
   }
 }
 
-//utility functions
-function formatNoteData(noteData) {
-  const newNoteData = Object.assign({}, noteData);
-
-  const creationDate = new Date(noteData.creationDate);
-  const lastEditDate = new Date(noteData.lastEditDate);
-  newNoteData.creationDate = formatDate(creationDate);
-  newNoteData.lastEditDate = formatDate(lastEditDate);
-
-  return newNoteData;
-}
-
-function formatDate(date) {
-  if (typeof date === "string") date = new Date(date);
-  return date.toLocaleString();
-}
-
-function getURLQuery() {
-  return new Proxy(new URLSearchParams(window.location.search), {
-    get: (searchParams, prop) => searchParams.get(prop),
-  });
-}
-
-//translate functions
-function modelId(noteId) {
-  return noteId.match(/\d+$/)[0];
-}
-
-function viewId(noteId) {
-  return `note-${noteId}`;
-}
-
-// I don't what should be exported from here
 const notesPresenter = {
-  renderAllNotes,
   renderSearched,
   selectNote,
   unselectNote,

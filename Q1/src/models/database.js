@@ -54,7 +54,6 @@ class SimpleDB {
 
   delete(id) {
     this.#readStorage();
-    console.log("deleting");
     let out = null;
     if (!(id in this.elements)) return out;
 

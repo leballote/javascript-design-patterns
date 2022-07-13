@@ -14,17 +14,35 @@ let currentSelected = null;
 
 const notesView = new PubSub();
 
+const eventTypes = {
+  loadPage: "loadPage",
+  newNote: "newNote",
+  saveNote: "saveNote",
+  deleteNote: "deleteNote",
+  selectNote: "selectNote",
+  unselectNote: "unselectNote",
+  searchNotes: "searchNotes",
+  exchangeNotes: "exchangeNotes",
+  undo: "undo",
+};
+
+Object.freeze(eventTypes);
+
+window.addEventListener("popstate", () => {
+  notesView.publish(eventTypes.loadPage, {});
+});
+
 newNoteBtn.addEventListener("click", () => {
-  notesView.publish("newNote", {});
+  notesView.publish(eventTypes.newNote, {});
 });
 
 blackBack.addEventListener("click", () => {
-  notesView.publish("saveNote", {
+  notesView.publish(eventTypes.saveNote, {
     id: currentSelected.id,
     lastEditDate: new Date().toISOString(),
     noteData: getNoteData(currentSelected),
   });
-  notesView.publish("unselectNote", {});
+  notesView.publish(eventTypes.unselectNote, {});
 });
 
 notesElement.addEventListener("click", (evt) => {
@@ -35,19 +53,19 @@ notesElement.addEventListener("click", (evt) => {
 
   if (noteEl) {
     if (saveButton) {
-      notesView.publish("saveNote", {
+      notesView.publish(eventTypes.saveNote, {
         id: noteEl.id,
         lastEditDate: new Date().toISOString(),
         noteData: getNoteData(noteEl),
       });
     } else if (deleteButton) {
-      notesView.publish("deleteNote", {
+      notesView.publish(eventTypes.deleteNote, {
         id: noteEl.id,
       });
     } else if (closeButton) {
       blackBack.click();
     } else {
-      notesView.publish("selectNote", {
+      notesView.publish(eventTypes.selectNote, {
         id: noteEl.id,
       });
     }
@@ -55,7 +73,7 @@ notesElement.addEventListener("click", (evt) => {
 });
 
 searchBox.addEventListener("input", (evt) => {
-  notesView.publish("searchNotes", {
+  notesView.publish(eventTypes.searchNotes, {
     text: evt.target.value,
   });
 });
@@ -86,19 +104,19 @@ notesElement.addEventListener("drop", (ev) => {
       note1Id: note1Id,
       note2Id: note.id,
     };
-    notesView.publish("exchangeNotes", context);
+    notesView.publish(eventTypes.exchangeNotes, context);
   }
 });
 
 undoBtn.addEventListener("click", (ev) => {
-  notesView.publish("undo", null);
+  notesView.publish(eventTypes.undo, null);
 });
 
 document.addEventListener("keydown", (ev) => {
   if (ev.ctrlKey && ev.key === "z") {
     if (!currentSelected) {
       ev.preventDefault();
-      notesView.publish("undo", null);
+      notesView.publish(eventTypes.undo, null);
     }
   }
 });
@@ -191,7 +209,7 @@ function fillNote(noteEl, noteData) {
 
 function selectNote(noteEl) {
   if (noteEl == null) unselectNote();
-  if (typeof noteEl === "string") {
+  if (typeof noteEl === "string" && noteEl !== "") {
     noteEl = document.querySelector(`.note#${noteEl}`);
   }
   if (noteEl && noteEl != currentSelected) {
@@ -253,7 +271,7 @@ const toExport = {
   createAndInsertNotes,
   createAndReplaceNotes,
 
-  // notesRelated edit related
+  // edit notes related
   fillNote,
   updateEditTime,
 
@@ -266,6 +284,7 @@ const toExport = {
 
   //others
   exchangeNotes,
+  eventTypes,
 };
 
 Object.assign(notesView, toExport);
